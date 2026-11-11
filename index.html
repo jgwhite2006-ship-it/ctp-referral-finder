@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTP Referral Source Finder</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#1d2433; --muted:#5b6475; --line:#e3e6eb;
+    --accent:#2a6fdb; --high:#1f8a4c; --med:#c27c0e; --low:#7a8394;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--card);border-bottom:1px solid var(--line);padding:18px 24px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  main{max-width:1280px;margin:0 auto;padding:20px 24px 40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .searchrow{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+  .field{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px}
+  .addr{flex:1;min-width:320px}
+  #acHost gmp-place-autocomplete{width:100%}
+  select{font:inherit;font-size:14px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .checks{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;padding:10px 0 0}
+  .checks label{display:flex;align-items:center;gap:5px}
+  button{font:inherit;font-size:14px;padding:9px 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+  button.secondary{background:#fff;color:var(--accent)}
+  button:disabled{opacity:.5;cursor:default}
+  #status{margin:12px 0 0;font-size:14px;color:var(--muted);min-height:20px}
+  #status.error{color:#b42318}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+  #map{height:460px;border-radius:10px;border:1px solid var(--line);background:#e9ecef}
+  .summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .pill{border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:13px;background:#fff}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .toolbar .grp{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;color:var(--muted);font-weight:600;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#fff;z-index:1}
+  td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.row{cursor:pointer} tr.row:hover{background:#f3f6fb}
+  .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;color:#fff;white-space:nowrap}
+  .High{background:var(--high)} .Medium{background:var(--med)} .Low{background:var(--low)}
+  .tablewrap{max-height:580px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  a{color:var(--accent)}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .setup{background:#fff8e6;border:1px solid #f0d58a;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.5}
+  .setup code{background:#fff;border:1px solid var(--line);padding:1px 5px;border-radius:4px}
+  @media(min-width:1000px){.grid{grid-template-columns:5fr 7fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>CTP Referral Source Finder</h1>
+  <p>Enter a clinic address to find nearby children's hospitals, pediatricians, doctors, and schools that could become referral partners.</p>
+</header>
+<main>
+  <div class="setup" id="setup" hidden>
+    <b>Setup needed:</b> this page needs a Google Maps API key. Open <code>index.html</code>, find
+    <code>GOOGLE_MAPS_API_KEY</code> near the bottom, and paste your key between the quotes.
+  </div>
+
+  <div class="card">
+    <div class="searchrow">
+      <div class="field addr">Clinic address
+        <div id="acHost"></div>
+      </div>
+      <label class="field">Radius
+        <select id="radius">
+          <option value="3">3 miles</option>
+          <option value="5" selected>5 miles</option>
+          <option value="10">10 miles</option>
+          <option value="15">15 miles</option>
+        </select>
+      </label>
+      <button type="button" id="goBtn" disabled>Find referral sources</button>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="incSchools" checked> Include schools</label>
+      <label><input type="checkbox" id="incChildcare"> Include preschools / childcare</label>
+      <label><input type="checkbox" id="incTherapy" checked> Show other therapy clinics (competitors)</label>
+    </div>
+    <div id="status">Loading Google Maps…</div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div id="map"></div>
+      <p class="note">
+        <b>Priority guide:</b>
+        <span class="tag High">High</span> children's hospitals and pediatric practices (the most common referral source in national research) ·
+        <span class="tag Medium">Medium</span> family/general clinics, general hospitals, behavioral health, and schools (often indirect referrers) ·
+        <span class="tag Low">Low</span> childcare and competitor therapy clinics (for awareness).
+      </p>
+    </div>
+    <div class="card">
+      <div class="summary" id="summary"></div>
+      <div class="toolbar">
+        <div class="grp">Show
+          <select id="filter">
+            <option value="all">All</option>
+            <option value="High">High priority</option>
+            <option value="Medium">Medium priority</option>
+            <option value="Low">Low priority</option>
+          </select>
+        </div>
+        <div class="grp">
+          <button class="secondary" id="copyBtn" disabled>Copy table</button>
+          <button class="secondary" id="csvBtn" disabled>Download CSV</button>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table id="results">
+          <thead><tr>
+            <th data-k="priorityRank">Priority</th>
+            <th data-k="name">Name</th>
+            <th data-k="category">Type</th>
+            <th data-k="dist">Miles</th>
+            <th data-k="address">Address</th>
+            <th>Contact</th>
+          </tr></thead>
+          <tbody><tr><td colspan="6" style="color:var(--muted)">Enter an address to see results.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="note">Results come from Google Maps. Click a row to find it on the map. Google returns up to 20 places per search category, so a very large radius in a dense area may not show everything.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ====================== SETTINGS ====================== */
+// Paste your Google Maps API key between the quotes.
+// It needs "Maps JavaScript API" and "Places API (New)" enabled.
+const GOOGLE_MAPS_API_KEY = "PASTE_YOUR_KEY_HERE";
+// Map starts centered on the Treasure Valley.
+const START_CENTER = {lat: 43.6, lng: -116.35};
+/* ====================================================== */
+
+const CHILD_RE = /child|pediatric|paediatric|kids|youth|infant|adolescent/i;
+const THERAPY_RE = /therap|speech|feeding|\baba\b|autism/i;
+const MEDICAL_RE = /hospital|medical center|pediatrics\b|pediatrician|family medicine/i;
+const PRIORITY_RANK = {High:1, Medium:2, Low:3};
+const COLORS = {High:"#1f8a4c", Medium:"#c27c0e", Low:"#7a8394"};
+const FIELDS = ["id","displayName","formattedAddress","location","types","primaryType",
+                "nationalPhoneNumber","websiteURI","googleMapsURI"];
+
+let map, Place, AdvancedMarkerElement, PinElement, infoWin, autocomplete;
+let markers = [], centerMarker = null, ring = null;
+let rows = [], sortKey = "priorityRank", sortAsc = true;
+let picked = null, lastAddress = "";
+
+function setStatus(msg, isError){
+  const s = document.getElementById("status");
+  s.textContent = msg; s.className = isError ? "error" : "";
+}
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- Load Google Maps ---------- */
+function loadGoogle(){
+  if(!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY.startsWith("PASTE")){
+    document.getElementById("setup").hidden = false;
+    setStatus("Add your Google Maps API key to start (see the yellow box above).", true);
+    return;
+  }
+  window.gm_authFailure = () => setStatus(
+    "Google rejected the API key. Check that the key is correct, billing is turned on, both APIs are enabled, and this website's address is allowed in the key's restrictions.", true);
+  // Google's recommended bootstrap loader
+  (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+  ({key: GOOGLE_MAPS_API_KEY, v: "weekly"});
+  init().catch(err => { console.error(err); setStatus("Google Maps failed to load: " + err.message, true); });
+}
+
+async function init(){
+  const {Map, Circle, InfoWindow} = await google.maps.importLibrary("maps");
+  const places = await google.maps.importLibrary("places");
+  ({AdvancedMarkerElement, PinElement} = await google.maps.importLibrary("marker"));
+  Place = places.Place;
+  window._Circle = Circle;
+
+  map = new Map(document.getElementById("map"), {
+    center: START_CENTER, zoom: 10, mapId: "DEMO_MAP_ID",
+    mapTypeControl: false, streetViewControl: false
+  });
+  infoWin = new InfoWindow();
+
+  // Address autocomplete (Google)
+  autocomplete = new places.PlaceAutocompleteElement({
+    includedRegionCodes: ["us"],
+    locationBias: {center: START_CENTER, radius: 50000}
+  });
+  autocomplete.setAttribute("placeholder", "Start typing an address, e.g. 2273 E Gala St, Meridian");
+  document.getElementById("acHost").appendChild(autocomplete);
+
+  const onPick = async (ev) => {
+    try{
+      const pred = ev.placePrediction || ev.detail?.placePrediction;
+      const place = pred ? pred.toPlace() : (ev.place || ev.detail?.place);
+      if(!place) return;
+      await place.fetchFields({fields: ["location","formattedAddress","displayName"]});
+      picked = {lat: place.location.lat(), lng: place.location.lng(),
+                label: place.formattedAddress || place.displayName};
+      lastAddress = picked.label;
+      search();
+    }catch(e){ console.error(e); setStatus("Couldn't read that address. Try picking it again.", true); }
+  };
+  autocomplete.addEventListener("gmp-select", onPick);       // current event name
+  autocomplete.addEventListener("gmp-placeselect", onPick);  // older event name
+
+  document.getElementById("goBtn").disabled = false;
+  setStatus("Ready. Start typing an address and pick it from the list.");
+}
+
+/* ---------- Search ---------- */
+function milesBetween(a, b){
+  const R = 3958.8, toR = x => x*Math.PI/180;
+  const dLat = toR(b.lat-a.lat), dLon = toR(b.lng-a.lng);
+  const h = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+
+function classify(p){
+  const name = p.displayName || "";
+  const types = p.types || [];
+  const has = t => types.includes(t);
+  const kid = CHILD_RE.test(name);
+
+  if(has("preschool") || has("child_care_agency")) return {category:"Preschool / Childcare", priority:"Low"};
+  if(has("school") || has("primary_school") || has("secondary_school")) return {category:"School", priority:"Medium"};
+  if(has("hospital") || has("general_hospital"))
+    return kid ? {category:"Children's hospital", priority:"High"} : {category:"Hospital", priority:"Medium"};
+  if(has("physiotherapist") || (THERAPY_RE.test(name) && !MEDICAL_RE.test(name)))
+    return {category:"Therapy clinic (competitor)", priority:"Low", therapy:true};
+  if(/psych|counsel|behavioral health|mental health/i.test(name)) return {category:"Mental / behavioral health", priority:"Medium"};
+  if(kid) return {category:"Pediatric practice", priority:"High"};
+  if(has("doctor") || has("medical_clinic") || has("health") || /clinic|medical|family|health/i.test(name))
+    return {category:"Family / general clinic", priority:"Medium"};
+  return {category:"Other", priority:"Medium"};
+}
+
+async function nearby(center, meters, types){
+  const {places} = await Place.searchNearby({
+    fields: FIELDS,
+    locationRestriction: {center, radius: Math.min(meters, 50000)},
+    includedTypes: types,
+    maxResultCount: 20,
+    rankPreference: google.maps.places.SearchNearbyRankPreference?.DISTANCE
+  });
+  return places || [];
+}
+async function textSearch(center, meters, query){
+  const {places} = await Place.searchByText({
+    textQuery: query,
+    fields: FIELDS,
+    locationBias: {center, radius: Math.min(meters, 50000)},
+    maxResultCount: 20
+  });
+  return places || [];
+}
+
+async function locateTypedAddress(){
+  // If the user typed but didn't pick a suggestion, look the text up.
+  const typed = (autocomplete?.value || "").trim();
+  if(!typed) return null;
+  const {places} = await Place.searchByText({
+    textQuery: typed, fields: ["location","formattedAddress"], maxResultCount: 1, region: "us"
+  });
+  if(!places || !places.length) return null;
+  return {lat: places[0].location.lat(), lng: places[0].location.lng(), label: places[0].formattedAddress || typed};
+}
+
+async function search(){
+  if(!Place) return;
+  const btn = document.getElementById("goBtn");
+  btn.disabled = true;
+  try{
+    let c = picked;
+    if(!c){
+      setStatus("Looking up address…");
+      c = await locateTypedAddress();
+      if(!c){ setStatus("Pick an address from the suggestion list first.", true); return; }
+      picked = c; lastAddress = c.label;
+    }
+    const radiusMi = +document.getElementById("radius").value;
+    const meters = radiusMi * 1609.34;
+    const opts = {
+      schools: document.getElementById("incSchools").checked,
+      childcare: document.getElementById("incChildcare").checked,
+      therapy: document.getElementById("incTherapy").checked
+    };
+    setStatus("Searching Google Maps for nearby providers…");
+    const center = {lat: c.lat, lng: c.lng};
+
+    const jobs = [
+      nearby(center, meters, ["hospital"]),
+      nearby(center, meters, ["doctor"]),
+      textSearch(center, meters, "pediatrician"),
+      textSearch(center, meters, "children's hospital"),
+      textSearch(center, meters, "developmental pediatrics"),
+      textSearch(center, meters, "family medicine clinic"),
+      textSearch(center, meters, "child psychologist")
+    ];
+    if(opts.schools) jobs.push(nearby(center, meters, ["primary_school"]), nearby(center, meters, ["school"]));
+    if(opts.childcare) jobs.push(nearby(center, meters, ["preschool","child_care_agency"]));
+    if(opts.therapy) jobs.push(textSearch(center, meters, "pediatric speech occupational therapy"), nearby(center, meters, ["physiotherapist"]));
+
+    const results = await Promise.allSettled(jobs);
+    const failures = results.filter(r => r.status === "rejected");
+    if(failures.length === results.length) throw failures[0].reason;
+
+    const seen = new Map();
+    for(const r of results){
+      if(r.status !== "fulfilled") continue;
+      for(const p of r.value){
+        if(!p.location || seen.has(p.id)) continue;
+        const loc = {lat: p.location.lat(), lng: p.location.lng()};
+        const dist = milesBetween(center, loc);
+        if(dist > radiusMi) continue;
+        const cl = classify(p);
+        if(cl.therapy && !opts.therapy) continue;
+        seen.set(p.id, {
+          name: p.displayName || "", category: cl.category, priority: cl.priority,
+          priorityRank: PRIORITY_RANK[cl.priority], dist, address: p.formattedAddress || "",
+          phone: p.nationalPhoneNumber || "", website: p.websiteURI || "",
+          mapsUrl: p.googleMapsURI || "", loc
+        });
+      }
+    }
+    rows = [...seen.values()];
+    drawMap(center, meters);
+    render();
+    setStatus(rows.length
+      ? `Found ${rows.length} places within ${radiusMi} miles of ${c.label}.` + (failures.length ? ` (${failures.length} search categories failed; results may be incomplete.)` : "")
+      : "No places found. Try a larger radius.");
+  }catch(err){
+    console.error(err);
+    setStatus("Search failed: " + (err.message || err) + ". Check that \"Places API (New)\" is enabled for your key.", true);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* ---------- Map ---------- */
+function pin(color, scale){
+  return new PinElement({background: color, borderColor: "#fff", glyphColor: "#fff", scale}).element;
+}
+function drawMap(center, meters){
+  markers.forEach(m => m.map = null); markers = [];
+  if(centerMarker) centerMarker.map = null;
+  if(ring) ring.setMap(null);
+  ring = new window._Circle({map, center, radius: meters, strokeColor:"#2a6fdb", strokeWeight:1, fillColor:"#2a6fdb", fillOpacity:.05});
+  centerMarker = new AdvancedMarkerElement({map, position: center, title: "Clinic location", content: pin("#2a6fdb", 1.3), zIndex: 1000});
+  for(const r of rows){
+    const m = new AdvancedMarkerElement({map, position: r.loc, title: r.name, content: pin(COLORS[r.priority], 0.9)});
+    m.addListener("click", () => openInfo(r, m));
+    r.marker = m; markers.push(m);
+  }
+  map.fitBounds(ring.getBounds());
+}
+function openInfo(r, m){
+  infoWin.setContent(`<div style="font:13px system-ui;max-width:240px"><b>${esc(r.name)}</b><br>${esc(r.category)} · ${r.dist.toFixed(1)} mi<br>${esc(r.address)}${r.phone ? "<br>" + esc(r.phone) : ""}</div>`);
+  infoWin.open({map, anchor: m || r.marker});
+}
+
+/* ---------- Table ---------- */
+function visibleRows(){
+  const f = document.getElementById("filter").value;
+  const list = rows.filter(r => f === "all" || r.priority === f);
+  list.sort((a,b) => {
+    let x = a[sortKey], y = b[sortKey];
+    if(typeof x === "string"){ x = x.toLowerCase(); y = String(y).toLowerCase(); }
+    const d = x < y ? -1 : x > y ? 1 : 0;
+    return (sortAsc ? d : -d) || a.dist - b.dist;
+  });
+  return list;
+}
+function render(){
+  const tb = document.querySelector("#results tbody");
+  const list = visibleRows();
+  tb.innerHTML = list.length ? list.map((r, i) => {
+    const contact = [
+      r.phone ? esc(r.phone) : "",
+      r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">Website</a>` : "",
+      r.mapsUrl ? `<a href="${esc(r.mapsUrl)}" target="_blank" rel="noopener">Google Maps</a>` : ""
+    ].filter(Boolean).join("<br>");
+    return `<tr class="row" data-i="${i}">
+      <td><span class="tag ${r.priority}">${r.priority}</span></td>
+      <td><b>${esc(r.name)}</b></td>
+      <td>${esc(r.category)}</td>
+      <td class="num">${r.dist.toFixed(1)}</td>
+      <td>${esc(r.address)}</td>
+      <td>${contact}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" style="color:var(--muted)">No results to show.</td></tr>`;
+  tb.querySelectorAll("tr.row").forEach(tr => tr.addEventListener("click", e => {
+    if(e.target.closest("a")) return;
+    const r = list[+tr.dataset.i];
+    map.panTo(r.loc); openInfo(r);
+  }));
+
+  const counts = {};
+  rows.forEach(r => counts[r.category] = (counts[r.category] || 0) + 1);
+  const order = ["Children's hospital","Pediatric practice","Family / general clinic","Hospital","Mental / behavioral health","School","Preschool / Childcare","Therapy clinic (competitor)","Other"];
+  document.getElementById("summary").innerHTML = order.filter(k => counts[k])
+    .map(k => `<span class="pill">${esc(k)}: <b>${counts[k]}</b></span>`).join("");
+  document.getElementById("copyBtn").disabled = !rows.length;
+  document.getElementById("csvBtn").disabled = !rows.length;
+}
+function toCSV(list){
+  const head = ["Priority","Name","Type","Miles","Address","Phone","Website","Google Maps"];
+  const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
+  return [head.map(q).join(",")].concat(list.map(r =>
+    [r.priority, r.name, r.category, r.dist.toFixed(1), r.address, r.phone, r.website, r.mapsUrl].map(q).join(","))).join("\n");
+}
+
+document.getElementById("csvBtn").addEventListener("click", () => {
+  const blob = new Blob([toCSV(visibleRows())], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "referral-sources-" + lastAddress.replace(/[^a-z0-9]+/gi,"-").slice(0,40) + ".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+});
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const list = visibleRows();
+  const tsv = [["Priority","Name","Type","Miles","Address","Phone","Website","Google Maps"].join("\t")]
+    .concat(list.map(r => [r.priority, r.name, r.category, r.dist.toFixed(1), r.address, r.phone, r.website, r.mapsUrl].join("\t"))).join("\n");
+  try{ await navigator.clipboard.writeText(tsv); setStatus("Copied. Paste it into Google Sheets or Excel."); }
+  catch(e){ setStatus("Couldn't copy automatically. Use Download CSV instead.", true); }
+});
+document.querySelectorAll("#results th[data-k]").forEach(th => th.addEventListener("click", () => {
+  const k = th.dataset.k;
+  if(sortKey === k) sortAsc = !sortAsc; else { sortKey = k; sortAsc = true; }
+  render();
+}));
+document.getElementById("filter").addEventListener("change", render);
+document.getElementById("goBtn").addEventListener("click", () => search());
+["radius","incSchools","incChildcare","incTherapy"].forEach(id =>
+  document.getElementById(id).addEventListener("change", () => { if(picked) search(); }));
+
+loadGoogle();
+</script>
+</body>
+</html>
