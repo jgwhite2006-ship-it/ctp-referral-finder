@@ -231,7 +231,7 @@
   <div class="stats" id="stats" hidden>
     <div class="card stat" style="--accent:var(--ctp-slate)"><div class="k">Total found</div><div class="v" id="stTotal">0</div><div class="s" id="stRadius"></div></div>
     <div class="card stat" style="--accent:var(--ctp-teal)"><div class="k">High priority</div><div class="v" id="stHigh">0</div><div class="s">Pediatric practices &amp; children's hospitals</div></div>
-    <div class="card stat" style="--accent:var(--ctp-lime)"><div class="k">Pediatric ✓ (NPI)</div><div class="v" id="stNpi">0</div><div class="s">Pediatric specialty in federal registry</div></div>
+    <div class="card stat" style="--accent:var(--ctp-lime)"><div class="k">Lists pediatric specialty</div><div class="v" id="stNpi">0</div><div class="s">Self-reported in NPI registry · unverified</div></div>
     <div class="card stat" style="--accent:#8a94a6"><div class="k">Competitors</div><div class="v" id="stComp">0</div><div class="s">Other therapy clinics nearby</div></div>
   </div>
 
@@ -252,8 +252,11 @@
         <span class="tag Low">Low</span> childcare and competitor therapy clinics, shown for awareness.
       </p>
       <p class="note">
-        <b>Pediatric check:</b> a ✓ means the federal NPI registry lists a pediatric specialty for a provider at that address. Providers choose this themselves and it isn't verified,
-        so it is <i>not</i> proof of board certification. Use the "Verify board certification" link (ABMS Certification Matters, free) to confirm a specific doctor.
+        <b>Pediatric specialty (unverified):</b> this column shows when a provider at that address, or with a matching last name, <i>lists</i> a pediatric specialty in the federal NPI registry.
+        Providers choose their own specialty there and no one checks it, and the address match can occasionally link the wrong doctor.
+        <b>It does not mean the doctor is board certified.</b> To confirm board certification, look the doctor up by name on the
+        <a href="https://www.abp.org/" target="_blank" rel="noopener">American Board of Pediatrics</a> site ("Verify Certification") or on
+        <a href="https://www.certificationmatters.org/" target="_blank" rel="noopener">Certification Matters</a>. Both are free.
       </p>
     </div>
     <div class="card results-card">
@@ -281,7 +284,7 @@
             <th data-k="name">Name &amp; address</th>
             <th data-k="category">Type</th>
             <th data-k="dist">Mi</th>
-            <th>Pediatric check</th>
+            <th>Pediatric specialty <span style="text-transform:none;letter-spacing:0;font-weight:600">(unverified)</span></th>
             <th>Contact</th>
           </tr></thead>
           <tbody><tr><td colspan="6" class="empty">Pick a CTP location above or enter an address to see results.</td></tr></tbody>
@@ -682,13 +685,13 @@ function render(){
 }
 function npiCell(r){
   if(!r.npi) return "<span style='color:var(--muted)'>—</span>";
-  return `<span class="npiok">✓ ${esc(r.npi.types.join("; "))}</span>
+  return `<span class="npiok">Lists: ${esc(r.npi.types.join("; "))}</span>
     <small style="display:block;color:var(--muted)">${esc(r.npi.people.join(" · "))}${r.npi.count > r.npi.people.length ? " +" + (r.npi.count - r.npi.people.length) + " more" : ""}</small>
-    <a href="${VERIFY_URL}" target="_blank" rel="noopener" style="font-size:12px">Verify board certification</a>`;
+    <a href="${VERIFY_URL}" target="_blank" rel="noopener" style="font-size:12px">Check board certification</a>`;
 }
 function npiText(r){ return r.npi ? r.npi.types.join("; ") + " (" + r.npi.people.join("; ") + ")" : ""; }
 function toCSV(list){
-  const head = ["Priority","Name","Type","Miles","Address","NPI pediatric specialty","Phone","Website","Google Maps"];
+  const head = ["Priority","Name","Type","Miles","Address","Lists pediatric specialty (NPI, unverified)","Phone","Website","Google Maps"];
   const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
   return [head.map(q).join(",")].concat(list.map(r =>
     [r.priority, r.name, r.category, r.dist != null ? r.dist.toFixed(1) : "", r.address, npiText(r), r.phone, r.website, r.mapsUrl].map(q).join(","))).join("\n");
@@ -703,7 +706,7 @@ document.getElementById("csvBtn").addEventListener("click", () => {
 });
 document.getElementById("copyBtn").addEventListener("click", async () => {
   const list = visibleRows();
-  const tsv = [["Priority","Name","Type","Miles","Address","NPI pediatric specialty","Phone","Website","Google Maps"].join("\t")]
+  const tsv = [["Priority","Name","Type","Miles","Address","Lists pediatric specialty (NPI, unverified)","Phone","Website","Google Maps"].join("\t")]
     .concat(list.map(r => [r.priority, r.name, r.category, r.dist != null ? r.dist.toFixed(1) : "", r.address, npiText(r), r.phone, r.website, r.mapsUrl].join("\t"))).join("\n");
   try{ await navigator.clipboard.writeText(tsv); setStatus("Copied. Paste it into Google Sheets or Excel."); }
   catch(e){ setStatus("Couldn't copy automatically. Use Download CSV instead.", true); }
