@@ -110,33 +110,7 @@
   .person{margin-bottom:4px;line-height:1.35}
   .pname{display:block;font-weight:700}
   .ptitle{display:block;font-size:12px;color:var(--muted)}
-  .trackbtn{font:inherit;font-size:12px;font-weight:700;white-space:nowrap;padding:5px 10px;border-radius:999px;border:1px dashed var(--ctp-teal);background:transparent;color:var(--link);cursor:pointer}
-  .trackbtn:hover{background:var(--hover)}
-  .trackbtn.tracked{border-style:solid}
-  .st-good{background:rgba(167,206,58,.18);border-color:var(--ctp-lime);color:var(--npi)}
-  .st-mid{background:var(--tagH-bg);border-color:var(--ctp-teal);color:var(--tagH)}
-  .st-warn{background:rgba(245,166,35,.15);border-color:#e0a030;color:#c98a12}
-  .st-bad{background:var(--tagL-bg);border-color:#8a94a6;color:var(--tagL)}
-  .st-none{background:var(--tagM-bg);border-color:var(--ctp-slate);color:var(--tagM)}
   .pill-accent{background:rgba(167,206,58,.16)}
-  .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px}
-  .modal[hidden]{display:none}
-  .modal-backdrop{position:absolute;inset:0;background:rgba(8,12,18,.55);backdrop-filter:blur(2px)}
-  .modal-card{position:relative;width:min(640px,100%);max-height:92vh;overflow:auto;padding:22px}
-  .modal-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}
-  .modal-head h3{margin:2px 0 2px;font-size:19px}
-  .eyebrow2{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ctp-teal)}
-  .tdsub{font-size:13px;color:var(--muted)}
-  .xbtn{font:inherit;font-size:22px;line-height:1;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
-  .modal form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:var(--muted)}
-  .modal input,.modal textarea,.modal form select{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;height:auto;text-transform:none;letter-spacing:0}
-  .modal input:focus,.modal textarea:focus{outline:3px solid rgba(75,168,178,.3);border-color:var(--ctp-teal)}
-  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-  .frow{margin-bottom:12px}
-  .modal .full{margin-bottom:12px}
-  .modal-foot{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:4px}
-  .tmsg{flex:1;font-size:13px;color:#d9534f}
-  @media(max-width:560px){.fgrid{grid-template-columns:1fr}}
   .setup code{background:var(--card);border:1px solid var(--line);padding:1px 6px;border-radius:6px}
 
   /* Stats */
@@ -305,7 +279,6 @@
         <div style="display:flex;gap:8px">
           <button type="button" class="btn btn-ghost" id="copyBtn" disabled>Copy table</button>
           <button type="button" class="btn btn-ghost" id="csvBtn" disabled>Download CSV</button>
-          <a class="btn btn-ghost" id="sheetLink" href="#" target="_blank" rel="noopener" style="text-decoration:none">Outreach tracker ↗</a>
         </div>
       </div>
       <div class="summary" id="summary"></div>
@@ -318,9 +291,8 @@
             <th data-k="dist">Mi</th>
             <th>Pediatric specialty <span style="text-transform:none;letter-spacing:0;font-weight:600">(unverified)</span></th>
             <th>Contact</th>
-            <th>Outreach</th>
           </tr></thead>
-          <tbody><tr><td colspan="7" class="empty">Pick a CTP location above or enter an address to see results.</td></tr></tbody>
+          <tbody><tr><td colspan="6" class="empty">Pick a CTP location above or enter an address to see results.</td></tr></tbody>
         </table>
       </div>
       <p class="note">Results come from Google Maps and the NPI registry. Click a row to find it on the map. Google returns up to 20 places per search category, so a large radius in a dense area may not show everything.</p>
@@ -328,33 +300,6 @@
   </div>
 </main>
 
-<div class="modal" id="trackDlg" hidden>
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-card card" role="dialog" aria-modal="true" aria-labelledby="tdName">
-    <div class="modal-head">
-      <div><div class="eyebrow2">Log outreach</div><h3 id="tdName"></h3><div class="tdsub" id="tdSub"></div></div>
-      <button type="button" class="xbtn" data-close aria-label="Close">×</button>
-    </div>
-    <form>
-      <div class="frow" name="codeRow" id="codeRow"><label>Team code<input name="code" autocomplete="off" placeholder="Ask your team lead"></label></div>
-      <div class="fgrid">
-        <label>Contact person<input name="person" placeholder="Name"></label>
-        <label>Title<input name="ctitle" placeholder="e.g. Office Manager"></label>
-        <label>Contact phone<input name="cphone"></label>
-        <label>Status<select name="status"></select></label>
-        <label>Your name<input name="owner" placeholder="Who reached out"></label>
-        <label>Date<input name="date" type="date"></label>
-      </div>
-      <label class="full">Next step<input name="next" placeholder="e.g. Drop off brochures Tuesday"></label>
-      <label class="full">Notes<textarea name="notes" rows="3" placeholder="What happened, who you spoke with, referral needs…"></textarea></label>
-      <div class="modal-foot">
-        <span id="trackMsg" class="tmsg"></span>
-        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
-        <button type="submit" class="btn btn-primary" style="height:42px">Save to tracker</button>
-      </div>
-    </form>
-  </div>
-</div>
 <footer>Built for Children's Therapy Place by BSU Team 1 · Data: Google Maps Platform and the CMS NPI Registry (via NLM)</footer>
 
 <script>
@@ -362,9 +307,6 @@
 // Paste your Google Maps API key between the quotes.
 // It needs "Maps JavaScript API" and "Places API (New)" enabled.
 const GOOGLE_MAPS_API_KEY = "AIzaSyAMzkUsQuBp6R_eFFFg84hUpV2CUKO5efk";
-// Outreach tracker: the Google Apps Script web app URL (see tracker/Code.gs) and the sheet link.
-const TRACKER_URL = "";
-const TRACKER_SHEET_URL = "https://docs.google.com/spreadsheets/d/1TZnkENL9I19dpHGNpkp9XfCDGJuQuyapRpWDxu23hRg/edit";
 // Map starts centered on the Treasure Valley.
 const START_CENTER = {lat: 43.6, lng: -116.35};
 /* ====================================================== */
@@ -578,7 +520,7 @@ async function search(){
     drawMap(center, meters);
     render();
     setStatus("Looking up contact people…");
-    await Promise.all([addContacts(rows), loadTracker()]);
+    await addContacts(rows);
     render();
     const npiMsg = npiNote ? " " + npiNote : "";
     setStatus(rows.length
@@ -735,91 +677,6 @@ async function addContacts(list){
 }
 function contactText(r){ return r.contact ? r.contact.person + (r.contact.title ? " (" + r.contact.title + ")" : "") : ""; }
 
-/* ---------- Outreach tracker (Google Sheet via Apps Script) ---------- */
-const STATUSES = ["Not contacted","Contacted","Follow-up needed","Meeting scheduled","Referring to CTP","Not interested"];
-let tracked = {}; // Key -> sheet row
-function teamCode(){ try{ return localStorage.getItem("ctp-team-code") || ""; }catch(e){ return window._teamCode || ""; } }
-function saveTeamCode(c){ try{ localStorage.setItem("ctp-team-code", c); }catch(e){} window._teamCode = c; }
-function savedOwner(){ try{ return localStorage.getItem("ctp-owner") || ""; }catch(e){ return ""; } }
-async function loadTracker(){
-  if(!TRACKER_URL || !teamCode()) return;
-  try{
-    const r = await fetch(TRACKER_URL + "?code=" + encodeURIComponent(teamCode()));
-    const j = await r.json();
-    if(j.error){ console.warn(j.error); return; }
-    tracked = {};
-    (j.rows || []).forEach(row => tracked[row.Key] = row);
-  }catch(e){ console.warn("Tracker read failed", e); }
-}
-function statusClass(s){
-  return /referring/i.test(s) ? "st-good" : /meeting|contacted/i.test(s) && !/not/i.test(s) ? "st-mid" : /follow/i.test(s) ? "st-warn" : /not interested/i.test(s) ? "st-bad" : "st-none";
-}
-function trackCell(r, i){
-  const t = tracked[r.key];
-  if(t) return `<button type="button" class="trackbtn tracked ${statusClass(t.Status)}" data-track="${i}" title="Owner: ${esc(t.Owner)} · Updated ${esc(t.Updated)}">${esc(t.Status || "Tracked")}</button>`;
-  return `<button type="button" class="trackbtn" data-track="${i}">+ Track</button>`;
-}
-
-function openTrackDialog(r){
-  const dlg = document.getElementById("trackDlg");
-  const t = tracked[r.key] || {};
-  const f = dlg.querySelector("form");
-  if(!TRACKER_URL){
-    document.getElementById("trackMsg").textContent = "The outreach tracker isn't connected yet. Add the Apps Script web app URL to TRACKER_URL in index.html.";
-  }else document.getElementById("trackMsg").textContent = "";
-  document.getElementById("tdName").textContent = r.name;
-  document.getElementById("tdSub").textContent = [r.category, r.address].filter(Boolean).join(" · ");
-  f.code.value = teamCode();
-  f.codeRow.hidden = !!teamCode();
-  f.person.value = t["Contact Person"] || r.contact?.person || "";
-  f.ctitle.value = t["Contact Title"] || r.contact?.title || "";
-  f.cphone.value = t["Contact Phone"] || r.contact?.phone || r.phone || "";
-  f.status.value = t.Status || "Contacted";
-  f.owner.value = t.Owner || savedOwner();
-  f.date.value = t["Last Contact Date"] || (d => new Date(d - d.getTimezoneOffset()*60000).toISOString().slice(0,10))(new Date());
-  f.next.value = t["Next Step"] || "";
-  f.notes.value = t.Notes || "";
-  dlg._row = r;
-  dlg.hidden = false;
-  setTimeout(() => (f.codeRow.hidden ? f.person : f.code).focus(), 0);
-}
-function closeTrackDialog(){ document.getElementById("trackDlg").hidden = true; }
-
-async function submitTrack(ev){
-  ev.preventDefault();
-  const dlg = document.getElementById("trackDlg"), f = ev.target, r = dlg._row, msg = document.getElementById("trackMsg");
-  if(!TRACKER_URL){ msg.textContent = "The tracker isn't connected yet."; return; }
-  const code = f.code.value.trim();
-  if(!code){ msg.textContent = "Enter the team code."; f.codeRow.hidden = false; return; }
-  const payload = {
-    code, Key: r.key, "CTP Location": lastAddress, Name: r.name, Type: r.category, Priority: r.priority,
-    Address: r.address, Phone: r.phone, "Contact Person": f.person.value.trim(), "Contact Title": f.ctitle.value.trim(),
-    "Contact Phone": f.cphone.value.trim(), Status: f.status.value, Owner: f.owner.value.trim(),
-    "Last Contact Date": f.date.value, "Next Step": f.next.value.trim(), Notes: f.notes.value.trim(), "Google Maps": r.mapsUrl
-  };
-  const btn = f.querySelector("button[type=submit]");
-  btn.disabled = true; msg.textContent = "Saving…";
-  try{
-    const res = await fetch(TRACKER_URL, {method: "POST", body: JSON.stringify(payload)}); // text/plain: no CORS preflight
-    const j = await res.json();
-    if(j.error){
-      msg.textContent = j.error === "Wrong team code" ? "That team code isn't right." : "Couldn't save: " + j.error;
-      if(j.error === "Wrong team code") f.codeRow.hidden = false;
-      return;
-    }
-    saveTeamCode(code);
-    try{ localStorage.setItem("ctp-owner", payload.Owner); }catch(e){}
-    tracked[r.key] = {...payload, Updated: j.updated};
-    delete tracked[r.key].code;
-    closeTrackDialog();
-    render();
-    setStatus(`Saved "${r.name}" to the outreach tracker.`);
-  }catch(e){
-    console.error(e);
-    msg.textContent = "Couldn't reach the tracker. Check your connection and try again.";
-  }finally{ btn.disabled = false; }
-}
-
 /* ---------- Map ---------- */
 function pin(color, scale){
   return new PinElement({background: color, borderColor: "#fff", glyphColor: "#fff", scale}).element;
@@ -876,12 +733,8 @@ function render(){
       <td class="typecell">${esc(r.category)}</td>
       <td class="num">${r.dist != null ? r.dist.toFixed(1) : "<span title='From NPI registry; distance not calculated'>nearby</span>"}</td>
       <td class="npicell">${npiCell(r)}</td>
-      <td class="contactcell">${contact}</td>
-      <td>${trackCell(r, i)}</td></tr>`;
-  }).join("") : `<tr><td colspan="7" class="empty">No results to show.</td></tr>`;
-  tb.querySelectorAll("[data-track]").forEach(b => b.addEventListener("click", e => {
-    e.stopPropagation(); openTrackDialog(list[+b.dataset.track]);
-  }));
+      <td class="contactcell">${contact}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="empty">No results to show.</td></tr>`;
   tb.querySelectorAll("tr.row").forEach(tr => tr.addEventListener("click", e => {
     if(e.target.closest("a") || e.target.closest("button")) return;
     const r = list[+tr.dataset.i];
@@ -899,9 +752,9 @@ function render(){
   document.getElementById("stHigh").textContent = rows.filter(r => r.priority === "High").length;
   document.getElementById("stNpi").textContent = rows.filter(r => r.npi).length;
   document.getElementById("stComp").textContent = rows.filter(r => r.therapy).length;
-  const nContacts = rows.filter(r => r.contact).length, nTracked = rows.filter(r => tracked[r.key]).length;
-  if(nContacts || nTracked) document.getElementById("summary").insertAdjacentHTML("beforeend",
-    `<span class="pill pill-accent">Named contacts <b>${nContacts}</b></span><span class="pill pill-accent">Already tracked <b>${nTracked}</b></span>`);
+  const nContacts = rows.filter(r => r.contact).length;
+  if(nContacts) document.getElementById("summary").insertAdjacentHTML("beforeend",
+    `<span class="pill pill-accent">Named contacts <b>${nContacts}</b></span>`);
   document.getElementById("stRadius").textContent = lastAddress ? "within " + document.getElementById("radius").value + " mi of " + lastAddress.split(",")[0] : "";
   document.getElementById("copyBtn").disabled = !rows.length;
   document.getElementById("csvBtn").disabled = !rows.length;
@@ -914,10 +767,10 @@ function npiCell(r){
 }
 function npiText(r){ return r.npi ? r.npi.types.join("; ") + " (" + r.npi.people.join("; ") + ")" : ""; }
 function toCSV(list){
-  const head = ["Priority","Name","Type","Miles","Address","Lists pediatric specialty (NPI, unverified)","Contact person (NPI)","Contact phone","Outreach status","Phone","Website","Google Maps"];
+  const head = ["Priority","Name","Type","Miles","Address","Lists pediatric specialty (NPI, unverified)","Contact person (NPI)","Contact phone","Phone","Website","Google Maps"];
   const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
   return [head.map(q).join(",")].concat(list.map(r =>
-    [r.priority, r.name, r.category, r.dist != null ? r.dist.toFixed(1) : "", r.address, npiText(r), contactText(r), r.contact?.phone || "", tracked[r.key]?.Status || "", r.phone, r.website, r.mapsUrl].map(q).join(","))).join("\n");
+    [r.priority, r.name, r.category, r.dist != null ? r.dist.toFixed(1) : "", r.address, npiText(r), contactText(r), r.contact?.phone || "", r.phone, r.website, r.mapsUrl].map(q).join(","))).join("\n");
 }
 
 document.getElementById("csvBtn").addEventListener("click", () => {
@@ -929,8 +782,8 @@ document.getElementById("csvBtn").addEventListener("click", () => {
 });
 document.getElementById("copyBtn").addEventListener("click", async () => {
   const list = visibleRows();
-  const tsv = [["Priority","Name","Type","Miles","Address","Lists pediatric specialty (NPI, unverified)","Contact person (NPI)","Contact phone","Outreach status","Phone","Website","Google Maps"].join("\t")]
-    .concat(list.map(r => [r.priority, r.name, r.category, r.dist != null ? r.dist.toFixed(1) : "", r.address, npiText(r), contactText(r), r.contact?.phone || "", tracked[r.key]?.Status || "", r.phone, r.website, r.mapsUrl].join("\t"))).join("\n");
+  const tsv = [["Priority","Name","Type","Miles","Address","Lists pediatric specialty (NPI, unverified)","Contact person (NPI)","Contact phone","Phone","Website","Google Maps"].join("\t")]
+    .concat(list.map(r => [r.priority, r.name, r.category, r.dist != null ? r.dist.toFixed(1) : "", r.address, npiText(r), contactText(r), r.contact?.phone || "", r.phone, r.website, r.mapsUrl].join("\t"))).join("\n");
   try{ await navigator.clipboard.writeText(tsv); setStatus("Copied. Paste it into Google Sheets or Excel."); }
   catch(e){ setStatus("Couldn't copy automatically. Use Download CSV instead.", true); }
 });
@@ -1003,18 +856,6 @@ document.querySelectorAll("#seg button").forEach(btn => btn.addEventListener("cl
   document.getElementById("filter").value = btn.dataset.f;
   render();
 }));
-
-// Outreach tracker wiring
-(function(){
-  const dlg = document.getElementById("trackDlg");
-  const sel = dlg.querySelector("select[name=status]");
-  sel.innerHTML = STATUSES.map(s => `<option>${s}</option>`).join("");
-  dlg.querySelector("form").codeRow = document.getElementById("codeRow");
-  dlg.querySelectorAll("[data-close]").forEach(el => el.addEventListener("click", closeTrackDialog));
-  dlg.querySelector("form").addEventListener("submit", submitTrack);
-  document.addEventListener("keydown", e => { if(e.key === "Escape" && !dlg.hidden) closeTrackDialog(); });
-  document.getElementById("sheetLink").href = TRACKER_SHEET_URL;
-})();
 
 loadGoogle();
 </script>
